@@ -1,0 +1,17 @@
+
+.reveal section h1 {
+	color: red;
+}
+
+#argo_list 
+{
+	color:#5A5A5A;
+}
+
+
+.container{
+    display: flex;
+}
+.col{
+    flex: 1;
+}

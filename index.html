@@ -3,51 +3,664 @@
   <head>
     <meta charset="utf-8" />
     <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-
-    <title>TITLE</title>
-
+    <title>FOSS4G</title>
+    <link rel="stylesheet" href="reveal.js/dist/theme/league.css" id="theme" />
     <link rel="stylesheet" href="reveal.js/dist/reset.css" />
     <link rel="stylesheet" href="reveal.js/dist/reveal.css" />
-    <link rel="stylesheet" href="reveal.js/dist/theme/league.css" id="theme" />
-
+    <link rel="stylesheet" href="./custom.css">
     <!-- Theme used for syntax highlighted code -->
     <link
-      rel="stylesheet"
-      href="reveal.js/plugin/highlight/monokai.css"
-      id="highlight-theme"
-    />
-  </head>
-  <body>
-    <div class="reveal">
-      <div class="slides">
-        <section>
-            <h1>Inception</h1> 
-            <p><b>A</b> <em>very</em> brief introduciton to Argo Workflows</p> 
-        </section>
-        <section>
-            Slide 2
-        </section>
-      </div>
-    </div>
+      rel="stylesheet" href="reveal.js/plugin/highlight/monokai.css" id="highlight-theme"
+      />
+    </head>
+    <body>
+      <div class="reveal">
+        <div class="slides">
+          <section data-transition="slide" data-background-image="./img/Inception_background_1.png">
+            <h1>Inception</h1>
+            <p>OR</p>
+            <p><b>A</b> <em>very</em> brief  introduction to Argo Workflows on Kubernetes</p>
+            <aside class="notes">
+              Inception or a very brief introduction to Argo Workflows. With this talk I'm picking up a thin thread from the last conference at the Engine Shed where Ant presented on QGIS graphical modeler and how in the GIS world we're very used to linked data processing workflows where data processing tasks have dependencies - think QGIS Modeler, FME or Model builder in GIS that shall not be named. In software engineering these get called Directed Acyliclal Graphs and there are now lots of these like Airflow, NiFi, dbt, Data Bricks etc where you can Orchestrate processing workflows. Today I'm going to introduce Argo, k8s, what you can do with it and how we've been using it. I also love a tortured metaphor so by the end hopefully understand the Inception reference.
+            </aside>
+          </section>
+          <section data-transition="fade" data-transition-speed="fast">
+            <h2>Hi!</h2>
+            <p>I'm Illya</p>
+            <p>Senior Geospatial Data Engineer</p>
+            <img src="./img/fmstrava/fmbystravastacked.svg"
+            height="150"
+            width="800">
+            <aside class="notes">
+              Just a quick introduction, I'm Illya I work at FATMAP by Strava, FATMAP we acquired earlier in the year and we're slowly integrating the technology between both the applications. If you haven't heard of Strava ask some folks around you because apparently 1-in-7 adults in the UK have Strava installed on their phones. FATMAP is a little more niche, but since 2014ish we've been specializing in displaying 3D map data on devices with a focus on outdoor adventures and exploration.
+            </aside>
+          </section>
+<!--           <section data-transition="fade" data-transition-speed="fast">
+            <img src="./img/team.svg">
+            <aside class="notes">
+              Here's my team
+            </aside>
+          </section> -->
+          <section data-transition="slide" data-transition-speed="fast">
+            
+            <div class='container'>
+              <div class='col'>
+              <video loop width="256" height="512" data-autoplay src="./video/illya_cut_b.mp4"></video>
+            </div>
+            <div class='col'>
+              <img src="./video/fatmap_1.gif" alt="">
+            </div>
+            <div class="col">
+              <img src="./video/fatmap_2.gif" alt="">
+            </div>
+            <div class="col">
+              <img src="./video/fatmap_4.gif" alt="">
+            </div>
+            <aside class="notes">
+              Here is what we do
+            </aside>
+          </section>
+          <section data-transition="fade" data-transition-speed="fast">
+            <h3>How do we get all this rich data to the map...</h3>
+            <ul>
+              <li class="fragment fade-left">Elevation Data</li>
+              <li class="fragment fade-left">Winter and Summer Satellite Imagery</li>
+              <li class="fragment fade-left">Vector Map Data - roads, paths, pistes, lifts</li>
+              <li class="fragment fade-left">Routes, POIs</li>
+            </ul>
+            <aside class="notes">
+              How do we get all this rich data to the map...
+              - Elevation data
+              - Winter and Summer Imagery
+              - Vector Data
+              - User content Routes and POIs
+            </aside>
+          </section>
+          <section data-transition="fade" data-transition-speed="fast">
+            <h2 class="r-fit-text">APIs</h2>
+          </section>
+          <section data-transition="fade" data-transition-speed="fast">
+            <p><h2 class="r-fit-text">Data Pipelines</h2></p>
+          </section>
+          <section data-transition="slide" data-transition-speed="fast">
+            <h2>Introducing Argo Workflows</h2>
+            <p>
+              <img src="./img/argo.png"
+              height="200"
+              >
+            </p>
+            <aside class="notes">
+              One of the tools we use to bring all the data to the map is Argo Workflows. (not to be confused with Argo CI/CD and Argo Events)
+            </aside>
+          </section>
+          <section data-transition="slide" data-transition-speed="fast" data-background-image="./img/argo.png" data-background-size="400px" data-background-opacity="0.2">
+            <h4>Argo Workflows: an open source container-native workflow engine for orchestrating parallel jobs on Kubernetes.</h4>
+            <p>
+              <ul>
+                <li class="fragment fade-right">Define workflows where each step in the workflow is a container</li>
+                <li class="fragment fade-left">Model multi-step workflows or capture dependencies between tasks using a directed acyclic graph (DAG)</li>
+                <li class="fragment fade-right">Flexible enough to use for a vast range of processing jobs</li>
+                <li class="fragment fade-left">Implemented as a Kubernetes CRD (Custom Resource Definition)</li>
+                <li class="fragment fade-left">Define workflows and templates as YAML or Python (Hera)</li>
+              </ul>
+            </p>
+            <aside class="notes">
+              Argo Workflows is an open source container-native workflow engine for orchestrating parallel jobs on Kubernetes.
+              <p>
+                It's main advantage as I said before is that each unit of work in an Argo workflow is a container - therefore we can put anything - literately any tool, any code from any language, any piece of software as long as it can run in a container and have it execute some work.
+              </p>
+              <p>
+                The container as the unit and the ability to express workflows as you would flow control in code mean it's flexible enough to handle a broad range of processing jobs.
+              </p>
+              <p>
+                But as it's implemented as natively in Kubernetes that gives it some even more enhanced features.
+              </p>
+            </aside>
+          </section>
+          <section id="argo_list" data-transition="fade" data-transition-speed="fast" data-background-image="./img/argo_1.png" data-background-size="1100" data-background-opacity="0.8">
 
-    <script src="reveal.js/dist/reveal.js"></script>
-    <script src="reveal.js/plugin/notes/notes.js"></script>
-    <script src="reveal.js/plugin/markdown/markdown.js"></script>
-    <script src="reveal.js/plugin/highlight/highlight.js"></script>
-    <script src="reveal.js/plugin/zoom/zoom.js"></script>
-    <script>
+            <aside class="notes">
+            <p>
+              <ul>
+                <li>UI to visualize and manage Workflows</li>
+                <li>Data Artifact (S3, Artifactory, Alibaba Cloud OSS, Azure Blob Storage - and you can mount disk volumes as per k8s)</li>
+                <li>Workflow templating to store commonly used Workflows in the cluster - think of this like saving a model out from QGIS with parameters, we do this alot so that someone can easily come along and just run a workflow with a few custom paramaters</li>
+                <li>Schedule jobs with regular crons</li>
+                <li>Step level input & outputs (artifacts/parameters)</li>
+                <li>Lots of standard flow control structures you'd find in a programming language loops, conditionals etc</li>
+                <li>Loops, Conditionals, flow control etc</li>
+                <li>Lots of monitoring, Event emission, Metrics, Logging via your k8s setup, Exit and Success notices, We have our workflows hooked up to Slack to we get notifications and logging outputs posted in specific channels</li>
+              </ul>
+            </p>
+            </aside>
+          </section>
+          <section data-transition="fade" data-transition-speed="fast">
+            <p>
+              <h2>
+              So what does a workflow look like in code?
+              </h2>
+            </p>
+          </section>
+          <section data-transition="slide">
+                                      <pre>
+                                            <code data-trim="true" data-line-numbers="1-18|20-35|37-54|65-70|73|79-85" style="max-height:800px; font-size:0.55em;" >
+                                        apiVersion: argoproj.io/v1alpha1
+                                        kind: Workflow
+                                        metadata:
+                                          generateName: "TantalusRange-DigitalGlobe-50cm-08062011-w-"
+                                        spec:
+                                          securityContext:
+                                            runAsUser: 0
+                                          entrypoint: loop-rasters
+                                          arguments:
+                                            parameters:
+                                            - name: log-level
+                                              value: debug
+                                            - name: catalogue-dsn
+                                              value: "postgres://some-postgres-connection/catalogue"
+                                            - name: pipeline-bucket
+                                              value: "a-bucket-name"
+                                            - name: rasters
+                                              value: '[{"dataset-id":"TantalusRange-DigitalGlobe-50cm-08062011-w","raster-path":"s3://coremapdata/raw/imagery/fatmap/processed/8b/TantalusRange_08062011_Winter/tantalusrange_02_8b.tif"},{"dataset-id":"TantalusRange-DigitalGlobe-50cm-08062011-w","raster-path":"s3://coremapdata/raw/imagery/fatmap/processed/8b/TantalusRange_08062011_Winter/TantalusRange_01_final_8b.tif"}]'
+                                        
+                                          templates:
+                                          - name: loop-rasters
+                                            parallelism: 50
+                                            inputs:
+                                              parameters:
+                                              - name: rasters
+                                            steps:
+                                            - - name: process-rasters
+                                                template: process-raster
+                                                arguments:
+                                                  parameters:
+                                                  - name: dataset-id
+                                                    value: "{{item.dataset-id}}"
+                                                  - name: raster-path
+                                                    value: "{{item.raster-path}}"
+                                                withParam: "{{inputs.parameters.rasters}}" # parameter specifies the list to iterate over
+                                        
+                                          - name: process-raster
+                                            retryStrategy:
+                                              limit: 5
+                                            inputs:
+                                              parameters:
+                                              - name: dataset-id
+                                              - name: raster-path
+                                            container:
+                                              image: some_fatmap_container_repo/raster-pipeline
+                                              imagePullPolicy: Always
+                                              env:
+                                              - name: PIPELINE_LOG_LEVEL
+                                                value: "{{workflow.parameters.log-level}}"
+                                              - name: PG_DSN
+                                                value: "{{workflow.parameters.catalogue-dsn}}"
+                                              - name: PIPELINE_BUCKET
+                                                value: "{{workflow.parameters.pipeline-bucket}}"
+                                              - name: AWS_ACCESS_KEY_ID
+                                                valueFrom:
+                                                  secretKeyRef:
+                                                    name: tiler-aws-credentials
+                                                    key: access_key
+                                              - name: AWS_SECRET_ACCESS_KEY
+                                                valueFrom:
+                                                  secretKeyRef:
+                                                    name: tiler-aws-credentials
+                                                    key: secret_access_key
+                                                # Retry every 1.5s for 15 minutes.
+                                              - name: GDAL_HTTP_MAX_RETRY
+                                                value: "600"
+                                              - name: GDAL_HTTP_RETRY_DELAY
+                                                value: "1.5"
+                                              - name: GDAL_HTTP_VERSION
+                                                value: "2"        # We want multiplexing.
+                                              - name: DOCKER_HOST # The docker daemon can be access on the standard port on localhost.
+                                                value: 127.0.0.1:2375
+                                              command: ["cloud", "{{inputs.parameters.dataset-id}}", "{{inputs.parameters.raster-path}}"]
+                                              volumeMounts:
+                                              - name: docker-config
+                                                mountPath: "/root"
+                                              - name: workdir
+                                                mountPath: /data
+                                              resources:
+                                                limits:
+                                                  cpu: "0.2"
+                                                  memory: 500Mi
+                                                requests:
+                                                  cpu: "0.1"
+                                                  memory: 500Mi
+                                            sidecars:
+                                            - name: dind
+                                              image: docker:18.09-dind
+                                              securityContext:
+                                                privileged: true # the Docker daemon can only run in a privileged container
+                                              # mirrorVolumeMounts will mount the same volumes specified in the main container
+                                              # to the sidecar (including artifacts), at the same mountPaths. This enables
+                                              # dind daemon to (partially) see the same filesystem as the main container in
+                                              # order to use features such as docker volume binding.
+                                              mirrorVolumeMounts: true
+                                              resources:
+                                                limits:
+                                                  cpu: "6"
+                                                  memory: 8Gi
+                                                requests:
+                                                  cpu: "3"
+                                                  memory: 8Gi
+                                          volumes:
+                                          - name: docker-config
+                                            secret:
+                                              secretName: docker-registry-key
+                                              items:
+                                                - key: .dockerconfigjson
+                                                  path: .dockercfg
+                                                  mode: 0600
+                                          - name: workdir
+                                            emptyDir: {}
+                                          imagePullSecrets:
+                                            - name: docker-registry-key
+                                          tolerations:
+                                          - key: "tier"
+                                            operator: "Equal"
+                                            value: "batch"
+                                            effect: "NoSchedule"
+                                          affinity:
+                                            nodeAffinity:
+                                              requiredDuringSchedulingIgnoredDuringExecution:
+                                                nodeSelectorTerms:
+                                                - matchExpressions:
+                                                  - key: tier
+                                                    operator: In
+                                                    values:
+                                                    - batch
+                                </code>
+            </pre>
+          </section>
+          <section data-transition="slide">
+                        <pre>
+                            <code  data-noescape="true" data-trim="true" data-line-numbers="1-5|8|11-14|29-49|38|76-84|150-157|245-252|254-261" style="max-height:800px; font-size:0.55em;">
+                      apiVersion: argoproj.io/v1alpha1
+                      kind: Workflow
+                      metadata:
+                        name: osm-import-replicate
+                        generateName: osm-download-import-replicate-
+                      spec:
+                        entrypoint: main-workflow
+                        onExit: workflow-exit-handler
+                        securityContext:
+                          runAsUser: 0
+                        volumes:
+                        - name: workdir
+                          persistentVolumeClaim:
+                            claimName: osm-file-cache
+                        arguments:
+                          parameters:
+                            - name: osm-url
+                              value: https://planet/url/planet-latest.osm.pbf
+                            - name: replication-server
+                              value: https://replication/day/
+                            - name: pbf-file
+                              value: /data/osm_download/planet-latest.osm.pbf
+                            - name: imposm-config
+                              value: /import_configs/planet_config.json
+                            - name: mapping-file
+                              value: /import_mappings/poi_tiles_mapping.yml
+                        templates:
+                        # DAG
+                        - name: main-workflow
+                          dag:
+                            tasks:
+                            - name: download-osm-pbf-file
+                              template: osm-tool-download
+                            - name: update-osm-pbf-file
+                              depends: download-osm-pbf-file
+                              template: osm-tool-replicate
+                            - name: create-postgis-extension
+                              depends: update-osm-pbf-file
+                              template: run-sql
+                              arguments:
+                                parameters:
+                                  - name: sql-file
+                                    value: /sql/init_db.sql
+                            - name: imposm-read-osm-file-to-cache
+                              depends: create-postgis-extension
+                              template: imposm-import-read
+                            - name: imposm-write-to-database
+                              depends: imposm-read-osm-file-to-cache
+                              template: imposm-import-write
+                              # run post import processing
+                            - name: post-process-import
+                              depends: imposm-write-to-database
+                              template: run-sql
+                              arguments:
+                                parameters:
+                                  - name: sql-file
+                                    value: /sql/post_import_poi_processing.sql
+                            - name: post-process-optimize
+                              depends: post-process-import
+                              template: imposm-import-optimize
+                            - name: deploy-poi-tables
+                              depends: post-process-optimize
+                              template: deploy-poi-tables
+                            # create replication triggers in the DB
+                            - name: create-replication-triggers
+                              depends: deploy-poi-tables
+                              template: run-sql
+                              arguments:
+                                parameters:
+                                  - name: sql-file
+                                    value: /sql/replication_triggers.sql
+                            # start the replication
+                            - name: start-osm-replication
+                              depends: create-replication-triggers
+                              template: osm-replicate
+                        # workflow templates
+                        - name: osm-tool-download
+                          container:
+                            image: download-pipeline
+                            command: [bash, -c]
+                            args: ["osm_tools download --osm_location {{workflow.parameters.osm-url}}"]
+                            volumeMounts:
+                            - name: workdir
+                              mountPath: /data
+                        - name: osm-tool-replicate
+                          retryStrategy:
+                            retryPolicy: "Always"
+                            limit: "5"
+                          container:
+                            image: download-pipeline
+                            command: [bash, -c]
+                            args: ["pyosmium-up-to-date -v -v --size 10000 --ignore-osmosis-headers --server {{workflow.parameters.replication-server}} {{workflow.parameters.pbf-file}}"]
+                            volumeMounts:
+                            - name: workdir
+                              mountPath: /data
+                        - name: run-sql
+                          inputs:
+                            parameters:
+                            - name: sql-file
+                          container:
+                            image: import-pipeline
+                            command: [bash, -c]
+                            args: ["psql -Atx postgresql://$OSM_DB_USER:$OSM_DB_PASSWORD@$OSM_DB_HOST/osm -f {{inputs.parameters.sql-file}}"]
+                            env:
+                            - name: OSM_DB_PASSWORD
+                              valueFrom:
+                                secretKeyRef:
+                                  name: osm-pipeline-postgres-user-credentials
+                                  key: DB_PASSWORD
+                            - name: OSM_DB_USER
+                              valueFrom:
+                                secretKeyRef:
+                                  name: osm-pipeline-postgres-user-credentials
+                                  key: DB_USERNAME
+                            - name: OSM_DB_HOST
+                              valueFrom:
+                                secretKeyRef:
+                                  name: db-connection
+                                  key: endpoint
+                            - name: OSM_DB_PORT
+                              valueFrom:
+                                secretKeyRef:
+                                  name: db-connection
+                                  key: port
+                        - name: imposm-import-read
+                          retryStrategy:
+                            retryPolicy: "Always"
+                            limit: "5"
+                          metadata:
+                            annotations:
+                              "cluster-autoscaler.kubernetes.io/safe-to-evict": "false"
+                          container:
+                            image: import-pipeline
+                            command: [bash, -c]
+                            args: ["imposm import -config {{workflow.parameters.imposm-config}} -read {{workflow.parameters.pbf-file}} {{workflow.parameters.cache-behaviour-diff}} {{workflow.parameters.cache-behaviour-write}}"]
+                            resources:
+                              requests:
+                                memory: "54Gi"
+                                cpu: "14"
+                            volumeMounts:
+                            - name: workdir
+                              mountPath: /data
+                        - name: imposm-import-write
+                          retryStrategy:
+                            retryPolicy: "Always"
+                            limit: "5"
+                          metadata:
+                            annotations:
+                              "cluster-autoscaler.kubernetes.io/safe-to-evict": "false"
+                          container:
+                            image: import-pipeline
+                            command: [bash, -c]
+                            args: ["imposm import -config {{workflow.parameters.imposm-config}} -connection postgis://${OSM_DB_USER}:${OSM_DB_PASSWORD}@${OSM_DB_HOST}/osm -write {{workflow.parameters.pbf-file}} {{workflow.parameters.cache-behaviour-diff}}"]
+                            resources:
+                              requests:
+                                memory: "54Gi"
+                                cpu: "14"
+                            volumeMounts:
+                            - name: workdir
+                              mountPath: /data
+                            env:
+                            - name: OSM_DB_PASSWORD
+                              valueFrom:
+                                secretKeyRef:
+                                  name: osm-pipeline-postgres-user-credentials
+                                  key: DB_PASSWORD
+                            - name: OSM_DB_USER
+                              valueFrom:
+                                secretKeyRef:
+                                  name: osm-pipeline-postgres-user-credentials
+                                  key: DB_USERNAME
+                            - name: OSM_DB_HOST
+                              valueFrom:
+                                secretKeyRef:
+                                  name: db-connection
+                                  key: endpoint
+                            - name: OSM_DB_PORT
+                              valueFrom:
+                                secretKeyRef:
+                                  name: db-connection
+                                  key: port
+                        - name: imposm-import-optimize
+                          retryStrategy:
+                            retryPolicy: "Always"
+                            limit: "5"
+                          metadata:
+                            annotations:
+                              "cluster-autoscaler.kubernetes.io/safe-to-evict": "false"
+                          container:
+                            image: import-pipeline
+                            command: [bash, -c]
+                            args: ["imposm import -config {{workflow.parameters.imposm-config}} -connection postgis://${OSM_DB_USER}:${OSM_DB_PASSWORD}@${OSM_DB_HOST}/osm -optimize"]
+                            volumeMounts:
+                            - name: workdir
+                              mountPath: /data
+                            env:
+                            - name: OSM_DB_PASSWORD
+                              valueFrom:
+                                secretKeyRef:
+                                  name: osm-pipeline-postgres-user-credentials
+                                  key: DB_PASSWORD
+                            - name: OSM_DB_USER
+                              valueFrom:
+                                secretKeyRef:
+                                  name: osm-pipeline-postgres-user-credentials
+                                  key: DB_USERNAME
+                            - name: OSM_DB_HOST
+                              valueFrom:
+                                secretKeyRef:
+                                  name: db-connection
+                                  key: endpoint
+                            - name: OSM_DB_PORT
+                              valueFrom:
+                                secretKeyRef:
+                                  name: db-connection
+                                  key: port
+                        - name: deploy-poi-tables
+                          container:
+                            image: import-pipeline
+                            command: [bash, -c]
+                            args: ["imposm import -config {{workflow.parameters.imposm-config}} -connection postgis://${OSM_DB_USER}:${OSM_DB_PASSWORD}@${OSM_DB_HOST}/osm -deployproduction"]
+                            env:
+                            - name: OSM_DB_PASSWORD
+                              valueFrom:
+                                secretKeyRef:
+                                  name: osm-pipeline-postgres-user-credentials
+                                  key: DB_PASSWORD
+                            - name: OSM_DB_USER
+                              valueFrom:
+                                secretKeyRef:
+                                  name: osm-pipeline-postgres-user-credentials
+                                  key: DB_USERNAME
+                            - name: OSM_DB_HOST
+                              valueFrom:
+                                secretKeyRef:
+                                  name: db-connection
+                                  key: endpoint
+                            - name: OSM_DB_PORT
+                              valueFrom:
+                                secretKeyRef:
+                                  name: db-connection
+                                  key: port
+                        
+                        # exit status templates
+                        - name: workflow-exit-handler
+                          steps:
+                          - - name: workflow-successful
+                              template: workflow-success
+                              when: "{{workflow.status}} == Succeeded"
+                          - - name: workflow-failed
+                              template: workflow-failed
+                              when: "{{workflow.status}} != Succeeded" 
+                       # replication deployment template
+                        - name: osm-replicate
+                          resource:
+                            action: create
+                            manifest: |
+                                apiVersion: apps/v1
+                                kind: Deployment
+                                metadata:
+                                  name: osm-replication-stream
+                                spec:
+                                  selector:
+                                    matchLabels:
+                                      app.kubernetes.io/component: osm-replicate
+                                      app.kubernetes.io/name: osm-replication-stream
+                                      app.kubernetes.io/part-of: osm-pipeline
+                                  replicas: 1
+                                  template:
+                                    metadata:
+                                      labels:
+                                        app.kubernetes.io/component: osm-replicate
+                                        app.kubernetes.io/name: osm-replication-stream
+                                        app.kubernetes.io/part-of: osm-pipeline
+                                      name: osm-replicate
+                                    spec:
+                                      volumes:
+                                        - name: workdir
+                                          persistentVolumeClaim:
+                                            claimName: osm-file-cache
+                                      containers:
+                                        - image: import-pipeline
+                                          name: osm-replicate
+                                          command:
+                                          - bash 
+                                          - /import_scripts/start_streaming_replication.sh
+                                          resources:
+                                            requests:
+                                              memory: "24Gi"
+                                              cpu: "7"
+                                            limits:
+                                              memory: "24Gi"
+                                              cpu: "7"
+                                          volumeMounts:
+                                            - mountPath: /data
+                                              name: workdir
+                                          envFrom:
+                                            - configMapRef:
+                                                name: osm-pipeline-env
+                
+                    
+                            </code>
+                      </pre>
+          </section>
+          <section data-transition="fade" data-background-image="./img/argo.png" data-background-size="400px" data-background-opacity="0.2">
+            <h3>What are we using it for...?</h3>
+            <p>
+              <ul>
+                <li class="fragment fade-in-then-out">OSM Planet Imports and Updates</li>
+                <li class="fragment fade-in-then-out">Satellite Imagery Processing e.g. Pan-sharpening, Orthorectification, Color Balancing</li>
+                <li class="fragment fade-in-then-out">Parallelised Tile generation - imagery and terrain</li>
+                <li class="fragment fade-in-then-out">Database syncs and maintenance operations</li>
+                <li class="fragment fade-in-then-out">Metadata ingestion and cataloging</li>
+              </ul>
+            </p>
+            <aside class="notes">         
+            </aside>
+          </section>
+          <section data-transition="fade" data-background-image="./img/argo.png" data-background-size="400px" data-background-opacity="0.2">
+            <h3>Tools we've put in workflows</h3>
+            <div class="container">
+              <div class="col">
+                <ul style="list-style-type: none">
+                  <li class="fragment fade-in-then-out"> <img src="./img/whitebox_tools.png"> </li>
+                  <li class="fragment fade-in-then-out"><img src="./img/orfeo-toolbox.png"></li>
+                </ul>
+              </div>
+              <div class="col">
+                <ul style="list-style-type: none">
+                  <li class="fragment fade-in-then-out"><img src="./img/python.png"></li>
+                  <li class="fragment fade-in-then-out"><img src="./img/geopandas.png"></li>
+                </ul>
+              </div>
+              <div class="col">
+                <ul style="list-style-type: none">
+                  <li class="fragment fade-in-then-out"><img src="./img/go_tools.png"></li>
+                </ul>
+              </div>
+            </div>
+          </section>
+          <section>
+            <p>
+              <h3>So why...</h3>
+              <h1>Inception</h1>
+            </p>
+          </section>
+          <section data-transition="fade" data-background-image="./img/deeper.jpg" data-background-size="1020px" data-background-opacity="0.4">
+          </section>
+<!--           <section data-transition="fade" data-background-image="./img/qgis_model_runner.png" data-background-size="1020px" data-background-opacity="0.8">
+          </section> -->
+          <section data-transition="fade" data-background-image="./img/qgis_model_runner.png" data-background-size="1020px" data-background-opacity="0.6">
+            <div class="r-stack">
+              <img class="fragment" src="./img/qgis_model.png" width="450" height="300">
+              <img class="fragment" src="./img/argo.png">
+            </div>
+          </section>
+          <section data-transition="convex">
+            <p>
+              <h3>Thanks!</h3>
+              <h1>Questions</h1>
+            </p>
+          </section>
+        </div>
+      </div>
+      <script src="reveal.js/dist/reveal.js"></script>
+      <script src="reveal.js/plugin/notes/notes.js"></script>
+      <script src="reveal.js/plugin/markdown/markdown.js"></script>
+      <script src="reveal.js/plugin/highlight/highlight.js"></script>
+      <script src="reveal.js/plugin/zoom/zoom.js"></script>
+      <script>
       // More info about initialization & config:
       // - https://revealjs.com/initialization/
       // - https://revealjs.com/config/
       Reveal.initialize({
-        hash: true,
-
-        // Learn about plugins: https://revealjs.com/plugins/
-        plugins: [RevealMarkdown, RevealHighlight, RevealNotes, RevealZoom],
+      hash: true,
+      progress: false,
+      controls: false,
+      // Learn about plugins: https://revealjs.com/plugins/
+      plugins: [RevealMarkdown, RevealHighlight, RevealNotes, RevealZoom],
       });
-    </script>
-  </body>
-</html>
+      </script>
+    </body>
+  </html>
